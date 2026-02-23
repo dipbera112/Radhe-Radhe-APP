@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RadheMantra App</title>
+<style>
+html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;font-family:sans-serif;}
+/* Splash */
+#splash{position:relative;width:300px;height:300px;display:flex;justify-content:center;align-items:center;background:#f0e6f6;margin:auto;}
+#circleText{width:300px;height:300px;border-radius:50%;display:flex;justify-content:center;align-items:center;position:absolute;animation: spin 5s linear infinite;}
+#circleText span{position:absolute;font-size:24px;color:#8b0000;font-weight:bold;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* Home */
+#homePage{display:none;text-align:center;position:relative;height:100vh;color:white;}
+#video-bg{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;}
+.home-btn{margin:10px;width:140px;height:140px;border-radius:15px;border:none;color:white;font-weight:bold;font-size:20px;cursor:pointer;position:relative;}
+.home-btn span{text-shadow:2px 2px 4px #000;position:absolute;bottom:5px;width:100%;text-align:center;}
+
+/* Mantra Page */
+#mantraPage{display:none;text-align:center;position:relative;height:100vh;}
+#count{font-size:30px;margin:20px 0;color:white;text-shadow:2px 2px 4px #000;}
+#backBtn{position:absolute;top:15px;left:15px;font-size:20px;padding:10px;border-radius:50%;background:#555;color:white;cursor:pointer;z-index:2;}
+#mantraContainer{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;background-size:cover;background-position:center;}
+#countBtn{font-size:24px;padding:12px 20px;border:none;border-radius:15px;background:rgba(0,0,0,0.5);color:white;cursor:pointer;position:relative;z-index:2;}
+
+/* Particle */
+.particle{position:absolute;width:10px;height:10px;background:gold;border-radius:50%;pointer-events:none;opacity:0.8;}
+
+/* Settings modal */
+#settingsModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;}
+#settingsContent{background:#fff;padding:20px;border-radius:10px;width:80%;max-width:400px;text-align:left;color:#000;}
+#settingsContent h2{margin-top:0;}
+.setting-btn{margin:5px;padding:10px 20px;border:none;border-radius:8px;background:#8b0000;color:white;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <div id="circleText"></div>
+</div>
+
+<!-- Home Page -->
+<div id="homePage">
+  <video id="video-bg" autoplay muted loop>
+    <source src="home_bg.mp4" type="video/mp4">
+  </video>
+  <h1 id="homeTitle">RadheMantra Home</h1>
+  <button class="home-btn" style="background:url('radhe.jpg');background-size:cover;" onclick="openMantra('Radhe Radhe','radhe.jpg',0)">
+    <span id="btnRadhe">রাধে রাধে</span>
+  </button>
+  <button class="home-btn" style="background:url('shiv.jpg');background-size:cover;" onclick="openMantra('Om Namah Shivaya','shiv.jpg',1)">
+    <span id="btnShiv">ওম নমঃ শিবায়</span>
+  </button>
+  <button class="home-btn" style="background:url('hanuman.jpg');background-size:cover;" onclick="openMantra('Jai Bajrangbali','hanuman.jpg',2)">
+    <span id="btnHanuman">জয় বজরংবলী</span>
+  </button>
+  <button class="home-btn" style="background:url('ganesha.jpg');background-size:cover;" onclick="openMantra('Om Ganeshaya Namah','ganesha.jpg',3)">
+    <span id="btnGanesha">ওম গণেশায় নমঃ</span>
+  </button>
+  <br>
+  <button class="setting-btn" onclick="openSettings()">Settings</button>
+</div>
+
+<!-- Mantra Page -->
+<div id="mantraPage">
+  <button id="backBtn" onclick="closeMantra()">←</button>
+  <h1 id="mantraTitle"></h1>
+  <div id="mantraContainer">
+    <div id="count">গণনা: 0 / 108</div>
+    <button id="countBtn" onclick="jap()"></button> <!-- Mantra Name -->
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal">
+  <div id="settingsContent">
+    <h2>Settings</h2>
+    <p>Select Language:</p>
+    <button class="setting-btn" onclick="setLanguage('bn')">বাংলা</button>
+    <button class="setting-btn" onclick="setLanguage('hi')">हिंदी</button>
+    <button class="setting-btn" onclick="setLanguage('en')">English</button>
+    <hr>
+    <button class="setting-btn">App Review</button>
+    <button class="setting-btn">Share App</button>
+    <button class="setting-btn">Privacy</button>
+    <br><br>
+    <button class="setting-btn" onclick="closeSettings()">Close</button>
+  </div>
+</div>
+
+<script>
+// ---------------- Splash circular text ----------------
+const splashText = "Radhe Radhe 🕉️ Radhe Radhe 🕉️ ";
+const splashContainer = document.getElementById("circleText");
+const letters = splashText.split("");
+const radius = 120;
+const angleStep = 360/letters.length;
+letters.forEach((char,i)=>{
+  const span = document.createElement("span");
+  span.innerText = char;
+  const angle = i*angleStep;
+  const rad = angle*(Math.PI/180);
+  span.style.left=`${150+radius*Math.cos(rad)-10}px`;
+  span.style.top=`${150+radius*Math.sin(rad)-10}px`;
+  splashContainer.appendChild(span);
+});
+
+// Splash → Home after 2 seconds
+setTimeout(()=>{
+  document.getElementById('splash').style.display='none';
+  document.getElementById('homePage').style.display='block';
+  applyLanguage(localStorage.getItem('lang') || 'bn');
+},2000);
+
+// ---------------- Mantra Page ----------------
+let count=0;
+const max=108;
+let currentSoundIndex = 0;
+
+// Sound array
+const sounds = [
+  new Audio('sound1.mp3'),
+  new Audio('sound2.mp3'),
+  new Audio('sound3.mp3'),
+  new Audio('sound4.mp3')
+];
+
+// Particle function
+function createParticle(x,y){
+  const p = document.createElement('div');
+  p.classList.add('particle');
+  p.style.left = x+'px';
+  p.style.top = y+'px';
+  document.body.appendChild(p);
+  setTimeout(()=>{p.remove();},800);
+}
+
+function openMantra(title,img,soundIndex){
+  document.getElementById('homePage').style.display='none';
+  document.getElementById('mantraPage').style.display='block';
+  document.getElementById('mantraTitle').innerText = title;
+  document.getElementById('mantraContainer').style.backgroundImage = `url(${img})`;
+  count=0;
+  document.getElementById('count').innerText=`গণনা: ${count} / ${max}`;
+  currentSoundIndex = soundIndex;
+
+  // Set mantra name on button
+  document.getElementById('countBtn').innerText = title;
+}
+
+function jap(){
+  if(count<max){
+    count++;
+    document.getElementById('count').innerText=`গণনা: ${count} / ${max}`;
+    
+    // Play sound
+    if(sounds[currentSoundIndex]){ sounds[currentSoundIndex].play(); }
+
+    // Particle effect
+    const x = Math.random()*window.innerWidth;
+    const y = Math.random()*window.innerHeight;
+    createParticle(x,y);
+  }
+  if(count===max){alert("🙏 ১০৮ বার সম্পন্ন 🙏");}
+}
+
+function closeMantra(){
+  document.getElementById('mantraPage').style.display='none';
+  document.getElementById('homePage').style.display='block';
+}
+
+// ---------------- Settings ----------------
+function openSettings(){document.getElementById('settingsModal').style.display='flex';}
+function closeSettings(){document.getElementById('settingsModal').style.display='none';}
+function setLanguage(lang){
+  localStorage.setItem('lang',lang);
+  applyLanguage(lang);
+  closeSettings();
+}
+
+// ---------------- Apply language ----------------
+function applyLanguage(lang){
+  if(lang==='bn'){
+    document.getElementById('homeTitle').innerText='RadheMantra Home';
+    document.getElementById('btnRadhe').innerText='রাধে রাধে';
+    document.getElementById('btnShiv').innerText='ওম নমঃ শিবায়';
+    document.getElementById('btnHanuman').innerText='জয় বজরংবলী';
+    document.getElementById('btnGanesha').innerText='ওম গণেশায় নমঃ';
+  } else if(lang==='hi'){
+    document.getElementById('homeTitle').innerText='RadheMantra Home';
+    document.getElementById('btnRadhe').innerText='राधे राधे';
+    document.getElementById('btnShiv').innerText='ॐ नमः शिवाय';
+    document.getElementById('btnHanuman').innerText='जय बजरंगबली';
+    document.getElementById('btnGanesha').innerText='ॐ गणेशाय नमः';
+  } else if(lang==='en'){
+    document.getElementById('homeTitle').innerText='RadheMantra Home';
+    document.getElementById('btnRadhe').innerText='Radhe Radhe';
+    document.getElementById('btnShiv').innerText='Om Namah Shivaya';
+    document.getElementById('btnHanuman').innerText='Jai Bajrangbali';
+    document.getElementById('btnGanesha').innerText='Om Ganeshaya Namah';
+  }
+}
+
+// Prevent back to close app
+history.pushState(null,null,location.href);
+window.onpopstate=function(){history.go(1);}
+</script>
+
+</body>
+</html>
